@@ -3,7 +3,7 @@ import { ApiError } from '../../utils/apiError.js';
 import { ApiResponse } from '../../utils/apiResponse.js';
 import { generateAccessToken, generateRefreshToken } from '../../utils/token.js';
 
-async function register(req, res) {
+async function register(req, res, next) {
     try {
         const { fullName, username, email, password, address, mobileNo } = req.body;
 
@@ -30,24 +30,24 @@ async function register(req, res) {
         }).lean();
 
         if (existedUser) {
-            throw new ApiError("409", "User with email or username already exists");
+            throw new ApiError(409, "User with email or username already exists");
         }
 
         const user = await Model.User.create(payload);
 
         const newUser = await Model.User.findById(user._id).select("-password -refreshToken").lean();
 
-        if (!newUser) throw new ApiError("500", "Something went wrong while registering user");
+        if (!newUser) throw new ApiError(500, "Something went wrong while registering user");
 
         return res.json(new ApiResponse(200, newUser, "User registered successfully"));
 
-
     } catch (error) {
         console.log("Error in AuthController.register: ", error);
+        next(error);
     }
 }
 
-async function login(req, res) {
+async function login(req, res, next) {
     try {
         const { username, email, password } = req.body;
 
@@ -89,10 +89,11 @@ async function login(req, res) {
 
     } catch (error) {
         console.log("Error in AuthController.login: ", error);
+        next(error);
     }
 }
 
-async function logout(req, res) {
+async function logout(req, res, next) {
     try {
         await Model.User.findByIdAndUpdate(
             req.params._id,
@@ -112,6 +113,7 @@ async function logout(req, res) {
             .json(200, {}, "User logged out successfully")
     } catch (error) {
         console.log("Error in AuthController.logout: ", error);
+        next();
     }
 }
 

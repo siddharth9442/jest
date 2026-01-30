@@ -18,12 +18,17 @@ const userSchema = new Schema({
     refreshToken: { type: String }
 }, { timestamps: true });
 
-const User = mongoose.model('Users', userSchema, 'users');
-
-
-userSchema.pre('save', function (next){
+// hash password
+userSchema.pre('save', async function (next){
     if(this.isModified("password")) {
-        this.password = bcrypt.hash(this.password, 10);
+        try {
+            this.password = await bcrypt.hash(this.password, 10);
+            return next();
+        } catch (error) {
+            console.log("Error while hashing password: ", error);
+            next(err);
+        }
+    } else {
         next();
     }
 });
@@ -32,4 +37,5 @@ userSchema.methods.isPasswordCorrect = async function(password) {
     return await bcrypt.compare(password, this.password);
 }
 
+const User = mongoose.model('Users', userSchema, 'users');
 export default User;

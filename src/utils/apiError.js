@@ -5,10 +5,10 @@ class ApiError extends Error {
         errors = [],
     ) {
         super(message);
-        this.data = null;
         this.statusCode = statusCode;
-        this.message = message;
         this.status = false;
+        this.message = message;
+        this.data = null;
         this.errors = errors;
     }
 }
