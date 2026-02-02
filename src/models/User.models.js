@@ -3,8 +3,8 @@ import bcrypt from 'bcrypt';
 
 const userSchema = new Schema({
     fullName: { type: String, require: true },
-    username: { type: String, trim: true, unique: true },
-    email: { type: String, trim: true, unique: true },
+    username: { type: String, trim: true },
+    email: { type: String, trim: true },
     password: { type: String, trim: true, require: true },
     avatar: { type: String },
     address: { 

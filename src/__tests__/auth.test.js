@@ -48,9 +48,58 @@ describe('Auth API', () => {
         expect(res.body.message).toBe('User registered successfully');
     });
 
-    // it("should login a user", async () => {
-    //     const res = await request(app)
-    //     .post('/api/auth/login')
-    //     .send({})
-    // })
+    describe("Login User", () => {
+        it("should login a user using email", async () => {
+
+            await Model.User.create({
+                fullName: "Siddharth Khubikar",
+                username: "siddharth1",
+                email: "test@example.com",
+                password: "Sid@123"
+            });
+
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: "test@example.com",
+                    password: "Sid@123"
+                });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body.data).toHaveProperty('user');
+            expect(res.body.data).toHaveProperty('accessToken');
+            expect(res.body.data).toHaveProperty('refreshToken');
+            expect(res.body.data.user).toHaveProperty('_id');
+            expect(res.body.data.user.username).toBe('siddharth1');
+            expect(res.body.data.user.email).toBe('test@example.com');
+        });
+
+        it("should login a user using username", async () => {
+            await Model.User.create({
+                fullName: "Siddharth Khubikar",
+                username: "siddharth1",
+                email: "test@example.com",
+                password: "Sid@123"
+            });
+
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    username: "siddharth1",
+                    password: "Sid@123"
+                });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body).toHaveProperty('data');
+            expect(res.body).toHaveProperty('data');
+            expect(res.body.data).toHaveProperty('user');
+            expect(res.body.data).toHaveProperty('accessToken');
+            expect(res.body.data).toHaveProperty('refreshToken');
+            expect(res.body.data.user).toHaveProperty('_id');
+            expect(res.body.data.user.username).toBe('siddharth1');
+            expect(res.body.data.user.email).toBe('test@example.com');
+        });
+    })
 })
