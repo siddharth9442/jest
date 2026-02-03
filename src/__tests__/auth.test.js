@@ -102,4 +102,4 @@ describe('Auth API', () => {
             expect(res.body.data.user.email).toBe('test@example.com');
         });
     })
-})
+});

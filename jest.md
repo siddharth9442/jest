@@ -98,3 +98,13 @@ In the above example, I want to test a login api.
 * **toBe()**
   - It is a **matcher**
   _ Its takes expected value and matches with the actual value
+
+## 4. Hooks
+* **beforeAll**  
+      This hook runs before all tests, mostly used to create mongodb connection if using.
+
+* **beforEach**  
+      This hook runs before each test, mostly used to clean collections used for previous tests.
+
+* **afterAll**  
+      This hook runs after all tests, mostly used to close mongodb connection.
