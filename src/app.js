@@ -9,10 +9,12 @@ app.use(express.static("public"));
 
 
 import authRouter from './controllers/auth/index.js';
-import productRouter from './controllers/admin/product/index.js'
+import productRouter from './controllers/admin/product/index.js';
+import adminAuthRouter from './controllers/admin/auth/index.js';
 
 app.use('/api/auth/', authRouter);
-app.use('/api/product/', authRouter);
+app.use('/api/admin/', adminAuthRouter);
+app.use('/api/admin/product/', productRouter);
 
 
 

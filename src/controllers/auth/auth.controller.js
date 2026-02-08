@@ -2,6 +2,7 @@ import * as Model from '../../models/index.js';
 import { ApiError } from '../../utils/apiError.js';
 import { ApiResponse } from '../../utils/apiResponse.js';
 import { generateAccessToken, generateRefreshToken } from '../../utils/token.js';
+import jwt from 'jsonwebtoken';
 
 async function register(req, res, next) {
     try {
@@ -69,6 +70,11 @@ async function login(req, res, next) {
         const accessToken = await generateAccessToken(user);
         const refreshToken = await generateRefreshToken(user);
 
+        if(refreshToken) {
+            user.refreshToken = refreshToken;
+            user.save({ validateBeforeSave: true });
+        }
+
         const loggedInUser = await Model.User.findById(user._id).select("-password -refreshToken").lean();
 
         return res
@@ -96,7 +102,7 @@ async function login(req, res, next) {
 async function logout(req, res, next) {
     try {
         await Model.User.findByIdAndUpdate(
-            req.params._id,
+            req.user._id,
             {
                 $unset: {
                     refreshToken: 1
@@ -108,17 +114,59 @@ async function logout(req, res, next) {
         );
 
         return res
+            .status(200)
             .clearCookie("accessToken")
             .clearCookie("refreshToken")
             .json(200, {}, "User logged out successfully")
     } catch (error) {
         console.log("Error in AuthController.logout: ", error);
-        next();
+        next(error);
+    }
+}
+
+async function refreshAccessToken(req, res, next) {
+    try {
+        const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+        if(!refreshToken) throw new ApiError(401, "Unauthorized request.");
+
+        const decodedToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRETE);
+
+        const user = await Model.User.findById(decodedToken._id);
+
+        if(!user) throw new ApiError(401, "Invalid refresh token.");
+
+        if(refreshToken !== user.refreshToken) throw new ApiError(401, "Refresh token is expired or used.");
+
+        const newAccessToken = await generateAccessToken(user);
+        const newRefreshToken = await generateRefreshToken(user);
+
+        if(newRefreshToken) {
+            user.refreshToken = newRefreshToken;
+            user.save({ validateBeforeSave: true });
+        }
+
+        return res
+        .status(200)
+        .cookie("accessToken", newAccessToken)
+        .cookie("refreshToken", newRefreshToken)
+        .json(
+            200,
+            {
+                accessToken: newAccessToken,
+                refreshToken: newRefreshToken
+            },
+            "Access token refreshed"
+        );
+    } catch (error) {
+        console.log("Error in AuthController.refreshAccessToken: ", error);
+        next(error);
     }
 }
 
 export {
     register,
     login,
-    logout
+    logout,
+    refreshAccessToken
 }
